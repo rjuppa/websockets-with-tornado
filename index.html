@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script>
+	var messageContainer, name, ta;
+    var stack = [];
+
+	window.onload = function () {
+		messageContainer = document.getElementById("messages");
+		messageContainer.innerHTML = "Initializing WebSocket";
+        ta = document.getElementById("ta");
+	};
+
+    function send(){
+        messagebox = document.getElementById("txt_msg");
+        if(messagebox && name){
+            msg = messagebox.value;
+            var ws = new WebSocket("ws://localhost:8000/" + name);
+            ws.onopen = function () {
+                ws.send(msg);
+            };
+            ws.onmessage = function (event) {
+                var recivedMessage = event.data;
+                messageContainer.innerHTML = recivedMessage;
+                var obj = JSON.parse(recivedMessage);
+                console.log(obj);
+                stack.push(obj);
+				render();
+            };
+            ws.onclose = function () {
+                messageContainer.innerHTML = "ConnectionClose";
+            };
+            messagebox.value = '';
+        }
+    }
+
+    function render(){
+        var max = stack.length-1;
+        var s = '';
+        for(var i=max; i>max-10; i-- ){
+            obj = stack[i];
+            if(obj){
+                s += obj.client_id + '> ' + obj.message + "\n";
+            }
+        }
+        ta.innerHTML = s;
+    }
+    function set_name(){
+        name_el = document.getElementById("txt_name");
+        if( name_el ){
+            name = name_el.value;
+            document.getElementById("lbl_name").innerHTML = 'I am ' + name;
+            document.getElementById("pname").style.display = 'none';
+            document.getElementById("pchat").style.display = 'block';
+        }
+    }
+	</script>
+	<meta charset="UTF-8">
+	<title>
+	</title>
+</head>
+<body>
+    <div id="pname">
+        <input type="text" id="txt_name">
+        <input type="button" onclick="set_name()" value="Set Name">
+    </div>
+    <div id="pchat" style="display: None">
+        <textarea id="ta" cols="20" rows="8"></textarea><br>
+        <p>
+            <span id="lbl_name"></span><br>
+            <input type="text" id="txt_msg"><br>
+            <input type="button" onclick="send()" value="Send">
+        </p>
+    </div>
+	<div id="messages" style="margin: 1em;padding: 2.5em 2.5em 1em 1em;color:gray"></div>
+</body>
+</html>
+
